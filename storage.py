@@ -3,6 +3,7 @@ import os
 from config import ABON_FILE
 
 abon_data = {}
+abon_pastuse_dates = {}  # история отметок по датам
 abon_history = []
 abon_mark_pending = {} # временное хранилище выбранных абонементов до подтверждения
 
