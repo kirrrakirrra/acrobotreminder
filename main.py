@@ -13,7 +13,7 @@ from commands import (
     pastuse_command, rename_command, delete_command,
     list_command, history_command
 )
-from handlers import handle_callback, handle_callback_response
+from handlers import handle_callback_query
 from notify import (
     send_admin_reminders,
     send_startup_notification,
@@ -61,8 +61,7 @@ async def main():
     app.add_handler(CommandHandler("history", history_command))
 
     # Register button callbacks
-    app.add_handler(CallbackQueryHandler(handle_callback))
-    app.add_handler(CallbackQueryHandler(handle_callback_response))
+    app.add_handler(CallbackQueryHandler(handle_callback_query))  # ✅ универсальный обработчик
 
     asyncio.create_task(scheduler(app))
     asyncio.create_task(start_webserver())
