@@ -1,82 +1,71 @@
 import asyncio
 import logging
-import nest_asyncio
 from aiohttp import web
-from telegram.ext import (
-    ApplicationBuilder,
-    CallbackQueryHandler,
-    CommandHandler,
-)
+from telegram import BotCommand
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler
 
+from config import TOKEN
 from commands import (
-    start_command, add_command, mark_command, check_command,
-    pastuse_command, rename_command, delete_command,
-    list_command, history_command
+    add_abonement, mark_visit, check_abonements, past_use,
+    rename_abonement, delete_abonement, list_abonements, show_history
 )
-from handlers import handle_callback_query
-from notify import (
-    send_admin_reminders,
-    send_startup_notification,
-    send_crash_notification,
-)
-from config import BOT_TOKEN
+from handlers import handle_callback_query, scheduler
+from storage import save_abons, abon_data
 
-import datetime
-import time
+logging.basicConfig(level=logging.INFO)
 
-nest_asyncio.apply()
+# Telegram Webhook Ping Handler (для Render или Heroku)
+async def handle(request):
+    return web.Response(text="Бот работает!")
 
-logging.basicConfig(
-    filename="bot.log",
-    filemode="a",
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    level=logging.INFO
-)
+async def set_commands(application: Application):
+    commands = [
+        BotCommand("add", "Добавить абонемент"),
+        BotCommand("mark", "Отметить посещение"),
+        BotCommand("check", "Проверить абонементы"),
+        BotCommand("pastuse", "Отметить прошлое посещение"),
+        BotCommand("rename", "Переименовать абонемент"),
+        BotCommand("delete", "Удалить абонемент"),
+        BotCommand("list", "Список абонементов"),
+        BotCommand("history", "История посещений"),
+    ]
+    await application.bot.set_my_commands(commands)
 
-# aiohttp ping endpoint
-async def handle_ping(request):
-    return web.Response(text="I'm alive!")
+async def main():
+    app = Application.builder().token(TOKEN).build()
 
-async def start_webserver():
-    app = web.Application()
-    app.router.add_get("/", handle_ping)
-    runner = web.AppRunner(app)
+    # Команды
+    app.add_handler(CommandHandler("add", add_abonement))
+    app.add_handler(CommandHandler("mark", mark_visit))
+    app.add_handler(CommandHandler("check", check_abonements))
+    app.add_handler(CommandHandler("pastuse", past_use))
+    app.add_handler(CommandHandler("rename", rename_abonement))
+    app.add_handler(CommandHandler("delete", delete_abonement))
+    app.add_handler(CommandHandler("list", list_abonements))
+    app.add_handler(CommandHandler("history", show_history))
+
+    # CallbackQuery обработчик (универсальный)
+    app.add_handler(CallbackQueryHandler(handle_callback_query))
+
+    # Планировщик напоминаний
+    scheduler()
+
+    # Запуск aiohttp-сервера (для Render ping)
+    web_app = web.Application()
+    web_app.router.add_get("/", handle)
+    runner = web.AppRunner(web_app)
     await runner.setup()
     site = web.TCPSite(runner, "0.0.0.0", 8080)
     await site.start()
 
-# Main entry point
-async def main():
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
+    await set_commands(app)
 
-    # Register commands
-    app.add_handler(CommandHandler("start", start_command))
-    app.add_handler(CommandHandler("add", add_command))
-    app.add_handler(CommandHandler("mark", mark_command))
-    app.add_handler(CommandHandler("check", check_command))
-    app.add_handler(CommandHandler("pastuse", pastuse_command))
-    app.add_handler(CommandHandler("rename", rename_command))
-    app.add_handler(CommandHandler("delete", delete_command))
-    app.add_handler(CommandHandler("list", list_command))
-    app.add_handler(CommandHandler("history", history_command))
-
-    # Register button callbacks
-    app.add_handler(CallbackQueryHandler(handle_callback_query))  # ✅ универсальный обработчик
-
-    asyncio.create_task(scheduler(app))
-    asyncio.create_task(start_webserver())
-    await send_startup_notification(app)
+    print("Бот запущен")
     await app.run_polling()
 
 if __name__ == "__main__":
-    while True:
-        try:
-            asyncio.run(main())
-        except Exception as e:
-            logging.exception("Бот упал с ошибкой. Перезапуск через 5 секунд...")
-            try:
-                app = ApplicationBuilder().token(BOT_TOKEN).build()
-                asyncio.run(send_crash_notification(app, e))
-            except:
-                pass
-            time.sleep(5)
+    try:
+        asyncio.run(main())
+    except (KeyboardInterrupt, SystemExit):
+        save_abons(abon_data)
+        print("Бот остановлен. Данные сохранены.")
