@@ -68,3 +68,12 @@ async def send_startup_notification(app):
         await app.bot.send_message(chat_id=NOTIFY_ID, text="🤖 Бот запущен и работает.")
     except Exception as e:
         print(f"Ошибка при отправке уведомления: {e}")
+
+async def send_crash_notification(app, error: Exception):
+    try:
+        await app.bot.send_message(
+            chat_id=NOTIFY_ID,
+            text=f"❌ Бот упал с ошибкой:\n{str(error)}"
+        )
+    except Exception as e:
+        print(f"Ошибка при отправке crash-уведомления: {e}")
