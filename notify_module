@@ -1,0 +1,70 @@
+import asyncio
+import datetime
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from config import ADMIN_ID
+
+# 👉 ID для уведомлений (не админ)
+NOTIFY_ID = 1291715324
+
+# Список групп и их расписания
+groups = [
+    {
+        "name": "Старшей начинающей группы",
+        "days": ["Monday", "Wednesday", "Friday"],
+        "time": "17:15",
+        "thread_id": 2225,
+    },
+    {
+        "name": "Старшей продолжающей группы",
+        "days": ["Monday", "Wednesday", "Friday"],
+        "time": "18:30",
+        "thread_id": 7,
+    },
+    {
+        "name": "Младшей группы",
+        "days": ["Tuesday", "Thursday"],
+        "time": "17:30",
+        "thread_id": 2226,
+    },
+]
+
+cancel_messages = {
+    "visa": "Всем доброго дня! 🛂 Сегодня я на визаране, поэтому занятия не будет. Отдохните хорошо, увидимся совсем скоро на тренировке! ☀️",
+    "illness": "Всем доброго дня! 🤒 К сожалению, я приболел и не смогу провести сегодняшнее занятие. Надеюсь быстро восстановиться и скоро увидеться с вами! Берегите себя! 🌷",
+    "unwell": "Всем доброго дня! 😌 Сегодня, к сожалению, чувствую себя неважно и не смогу провести тренировку. Спасибо за понимание — совсем скоро вернусь с новыми силами! 💪",
+    "unexpected": "Всем доброго дня! ⚠️ По непредвиденным обстоятельствам сегодня не смогу провести занятие. Спасибо за понимание, увидимся в следующий раз! 😊",
+    "tech": "Всем доброго дня! ⚙️ Сегодня, к сожалению, в зале возникли технические сложности, и мы не сможем провести тренировку. Уже работаем над тем, чтобы всё наладить. До скорой встречи! 🤸‍♀️",
+}
+
+def get_decision_keyboard(group_id):
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("✅ Да", callback_data=f"yes|{group_id}")],
+        [InlineKeyboardButton("❌ Нет, отмена", callback_data=f"no|{group_id}")],
+        [InlineKeyboardButton("⏭ Нет, но я сам напишу в группу", callback_data=f"skip|{group_id}")],
+    ])
+
+def get_reason_keyboard(group_id):
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("🤒 Болезнь", callback_data=f"reason|{group_id}|illness")],
+        [InlineKeyboardButton("🛂 Визаран", callback_data=f"reason|{group_id}|visa")],
+        [InlineKeyboardButton("😌 Плохое самочувствие", callback_data=f"reason|{group_id}|unwell")],
+        [InlineKeyboardButton("⚠️ Непредвиденное", callback_data=f"reason|{group_id}|unexpected")],
+        [InlineKeyboardButton("⚙️ Тех. неполадки", callback_data=f"reason|{group_id}|tech")],
+    ])
+
+async def send_admin_reminders(app):
+    now = datetime.datetime.utcnow() + datetime.timedelta(hours=7)
+    weekday = now.strftime("%A")
+    for idx, group in enumerate(groups):
+        if weekday in group["days"]:
+            await app.bot.send_message(
+                chat_id=ADMIN_ID,
+                text=f"Сегодня занятие для {group['name']} в {group['time']} по расписанию?",
+                reply_markup=get_decision_keyboard(idx)
+            )
+
+async def send_startup_notification(app):
+    try:
+        await app.bot.send_message(chat_id=NOTIFY_ID, text="🤖 Бот запущен и работает.")
+    except Exception as e:
+        print(f"Ошибка при отправке уведомления: {e}")
