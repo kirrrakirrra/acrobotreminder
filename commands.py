@@ -1,77 +1,108 @@
 from telegram import Update
 from telegram.ext import ContextTypes
-from storage import abon_data, save_abons, ADMIN_ID
-from keyboards import (
-    get_mark_keyboard, get_check_keyboard, get_pastuse_keyboard,
-    get_rename_keyboard
-)
+from storage import abon_data, save_abons
+from keyboards import get_mark_keyboard
 
+# Добавить абонемент
+async def add_abonement(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    group_name = update.effective_chat.title or "test"
+    if group_name not in abon_data:
+        abon_data[group_name] = {}
 
-async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Бот активен и готов к работе!")
-
-
-async def add_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id != ADMIN_ID:
-        return
     args = context.args
     if not args:
-        await update.message.reply_text("Введите имя абонемента: /add Имя")
+        await update.message.reply_text("Пожалуйста, укажите имя абонемента после команды.")
         return
-    name = " ".join(args)
-    if name in abon_data and not abon_data[name].get("deleted"):
-        await update.message.reply_text("Абонемент с таким именем уже существует")
+
+    abonement_name = " ".join(args)
+    abon_data[group_name][abonement_name] = []
+    save_abons(abon_data)  # ✅ сохранить после добавления
+    await update.message.reply_text(f"Абонемент \"{abonement_name}\" добавлен.")
+
+# Отметить посещение
+async def mark_visit(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    group_name = update.effective_chat.title or "test"
+    if group_name not in abon_data or not abon_data[group_name]:
+        await update.message.reply_text("Нет доступных абонементов для отметки.")
         return
-    abon_data[name] = {
-        "used_sessions": [],
-        "start_date": None,
-        "deleted": False,
-    }
-    save_abons()
-    await update.message.reply_text(f"Абонемент {name} добавлен ✅")
 
+    reply_markup = get_mark_keyboard(group_name)
+    await update.message.reply_text("Отметьте посещения:", reply_markup=reply_markup)
 
-async def list_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id != ADMIN_ID:
+# Отметить прошлое посещение (через аргумент)
+async def past_use(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    group_name = update.effective_chat.title or "test"
+    args = context.args
+    if len(args) < 2:
+        await update.message.reply_text("Формат: /pastuse [имя] [YYYY-MM-DD]")
         return
-    text = "Активные абонементы:\n"
-    for name, data in abon_data.items():
-        if not data.get("deleted"):
-            text += f"- {name}: {len(data['used_sessions'])}/8\n"
-    await update.message.reply_text(text.strip())
 
-
-async def mark_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id != ADMIN_ID:
+    abonement_name = " ".join(args[:-1])
+    date = args[-1]
+    if group_name not in abon_data or abonement_name not in abon_data[group_name]:
+        await update.message.reply_text("Такой абонемент не найден.")
         return
-    await update.message.reply_text("Выберите абонементы для отметки посещения:", reply_markup=get_mark_keyboard())
 
+    abon_data[group_name][abonement_name].append(date)
+    save_abons(abon_data)  # ✅ сохранить после добавления даты
+    await update.message.reply_text(f"Добавлено посещение {abonement_name} за {date}.")
 
-async def check_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Выберите абонемент для проверки:", reply_markup=get_check_keyboard())
-
-
-async def pastuse_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id != ADMIN_ID:
+# Переименовать абонемент
+async def rename_abonement(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    group_name = update.effective_chat.title or "test"
+    args = context.args
+    if len(args) < 2:
+        await update.message.reply_text("Формат: /rename [старое имя] [новое имя]")
         return
-    await update.message.reply_text("Выберите абонемент для добавления прошедших посещений:", reply_markup=get_pastuse_keyboard())
 
-
-async def rename_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id != ADMIN_ID:
+    old_name = args[0]
+    new_name = " ".join(args[1:])
+    if group_name not in abon_data or old_name not in abon_data[group_name]:
+        await update.message.reply_text("Такой абонемент не найден.")
         return
-    await update.message.reply_text("Выберите абонемент для переименования:", reply_markup=get_rename_keyboard())
 
+    abon_data[group_name][new_name] = abon_data[group_name].pop(old_name)
+    save_abons(abon_data)  # ✅ сохранить после переименования
+    await update.message.reply_text(f"Абонемент \"{old_name}\" переименован в \"{new_name}\".")
 
-async def delete_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id != ADMIN_ID:
+# Удалить абонемент
+async def delete_abonement(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    group_name = update.effective_chat.title or "test"
+    args = context.args
+    if not args:
+        await update.message.reply_text("Пожалуйста, укажите имя абонемента для удаления.")
         return
-    from keyboards import get_rename_keyboard  # переиспользуем клавиатуру
-    await update.message.reply_text("Выберите абонемент для удаления:", reply_markup=get_rename_keyboard())
 
-
-async def history_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id != ADMIN_ID:
+    abonement_name = " ".join(args)
+    if group_name not in abon_data or abonement_name not in abon_data[group_name]:
+        await update.message.reply_text("Такой абонемент не найден.")
         return
-    from keyboards import get_date_history_keyboard
-    await update.message.reply_text("Выберите дату для просмотра истории:", reply_markup=get_date_history_keyboard())
+
+    del abon_data[group_name][abonement_name]
+    save_abons(abon_data)  # ✅ сохранить после удаления
+    await update.message.reply_text(f"Абонемент \"{abonement_name}\" удалён.")
+
+# Показать список абонементов
+async def list_abonements(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    group_name = update.effective_chat.title or "test"
+    if group_name not in abon_data or not abon_data[group_name]:
+        await update.message.reply_text("Нет активных абонементов.")
+        return
+
+    message = "📋 Список абонементов:\n\n"
+    for name, visits in abon_data[group_name].items():
+        message += f"🔹 {name} — {len(visits)} посещений\n"
+    await update.message.reply_text(message)
+
+# Показать историю посещений
+async def show_history(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    group_name = update.effective_chat.title or "test"
+    if group_name not in abon_data or not abon_data[group_name]:
+        await update.message.reply_text("Нет абонементов.")
+        return
+
+    message = "📖 История посещений:\n\n"
+    for name, visits in abon_data[group_name].items():
+        dates = ", ".join(visits) if visits else "нет посещений"
+        message += f"🔹 {name}: {dates}\n"
+    await update.message.reply_text(message)
