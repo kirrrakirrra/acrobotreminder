@@ -4,7 +4,7 @@ from aiohttp import web
 from telegram import BotCommand
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler
 
-from config import TOKEN
+from config import BOT_TOKEN
 from commands import (
     add_abonement, mark_visit, check_abonements, past_use,
     rename_abonement, delete_abonement, list_abonements, show_history
