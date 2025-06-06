@@ -45,19 +45,6 @@ async def start_webserver():
     site = web.TCPSite(runner, "0.0.0.0", 8080)
     await site.start()
 
-# Main scheduler
-async def scheduler(app):
-    while True:
-        try:
-            now = datetime.datetime.utcnow() + datetime.timedelta(hours=7)
-            if now.hour == 12 and now.minute == 30:
-                await send_admin_reminders(app)
-                await asyncio.sleep(60)
-            await asyncio.sleep(20)
-        except Exception as e:
-            logging.exception("Ошибка в scheduler")
-            await asyncio.sleep(10)
-
 # Main entry point
 async def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
