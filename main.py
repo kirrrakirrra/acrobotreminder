@@ -8,13 +8,13 @@ from telegram.ext import (
     CommandHandler,
 )
 
-from commands_module import (
+from commands import (
     start_command, add_command, mark_command, check_command,
     pastuse_command, rename_command, delete_command,
     list_command, history_command
 )
-from handlers_module import handle_callback, handle_callback_response
-from notify_module import (
+from handlers import handle_callback, handle_callback_response
+from notify import (
     send_admin_reminders,
     send_startup_notification,
     send_crash_notification,
