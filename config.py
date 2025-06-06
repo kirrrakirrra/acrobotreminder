@@ -1,10 +1,9 @@
 import os
 
-# Токены и ID
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-ADMIN_ID = 1291715324
-NOTIFY_ID = 1291715324
-GROUP_ID = -1001988198250
+ADMIN_ID = int(os.getenv("ADMIN_ID"))
+GROUP_ID = int(os.getenv("GROUP_ID"))
+NOTIFY_ID = int(os.getenv("NOTIFY_ID"))
 
 # Файлы
 ABON_FILE = "abons.json"
