@@ -193,7 +193,7 @@ cancel_messages = {
 
 
 groups = [
-    {"name": "Старшей начинающей группы", "days": ["Monday", "Wednesday", "Friday"], "time": "17:15", "thread_id": 2225},
+    {"name": "Старшей начинающей группы", "days": ["Monday", "Wednesday", "Friday"], "time": "17:15", "thread_id": 105},
     {"name": "Старшей продолжающей группы", "days": ["Monday", "Wednesday", "Friday"], "time": "18:30", "thread_id": 7},
     {"name": "Младшей группы", "days": ["Tuesday", "Thursday"], "time": "17:30", "thread_id": 2226},
 ]
@@ -217,7 +217,7 @@ async def scheduler(app):
     while True:
         now_utc = datetime.datetime.utcnow()
         now = now_utc + datetime.timedelta(hours=7)
-        if now.hour == 12 and now.minute == 30:
+        if now.hour == 19 and now.minute == 03:
             weekday = now.strftime("%A")
             for idx, group in enumerate(groups):
                 if weekday in group["days"]:
