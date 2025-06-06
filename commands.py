@@ -1,10 +1,15 @@
 from telegram import Update
 from telegram.ext import ContextTypes
 from storage import abon_data, save_abons
-from keyboards import get_mark_keyboard
+from keyboards import get_mark_keyboard, get_check_keyboard
+from config import ADMIN_ID  
 
 # Добавить абонемент
 async def add_abonement(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+    await update.message.reply_text("Извините, эта команда доступна только администратору.")
+    return
+    
     group_name = update.effective_chat.title or "test"
     if group_name not in abon_data:
         abon_data[group_name] = {}
@@ -21,6 +26,10 @@ async def add_abonement(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # Отметить посещение
 async def mark_visit(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        await update.message.reply_text("Извините, эта команда доступна только администратору.")
+        return
+
     group_name = update.effective_chat.title or "test"
     if group_name not in abon_data or not abon_data[group_name]:
         await update.message.reply_text("Нет доступных абонементов для отметки.")
@@ -31,6 +40,10 @@ async def mark_visit(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # Отметить прошлое посещение (через аргумент)
 async def past_use(update: Update, context: ContextTypes.DEFAULT_TYPE):
+     if update.effective_user.id != ADMIN_ID:
+        await update.message.reply_text("Извините, эта команда доступна только администратору.")
+        return
+         
     group_name = update.effective_chat.title or "test"
     args = context.args
     if len(args) < 2:
@@ -49,6 +62,10 @@ async def past_use(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # Переименовать абонемент
 async def rename_abonement(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        await update.message.reply_text("Извините, эта команда доступна только администратору.")
+        return
+        
     group_name = update.effective_chat.title or "test"
     args = context.args
     if len(args) < 2:
@@ -67,6 +84,10 @@ async def rename_abonement(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # Удалить абонемент
 async def delete_abonement(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        await update.message.reply_text("Извините, эта команда доступна только администратору.")
+        return
+        
     group_name = update.effective_chat.title or "test"
     args = context.args
     if not args:
@@ -84,6 +105,10 @@ async def delete_abonement(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # Показать список абонементов
 async def list_abonements(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        await update.message.reply_text("Извините, эта команда доступна только администратору.")
+        return
+        
     group_name = update.effective_chat.title or "test"
     if group_name not in abon_data or not abon_data[group_name]:
         await update.message.reply_text("Нет активных абонементов.")
@@ -96,6 +121,10 @@ async def list_abonements(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # Показать историю посещений
 async def show_history(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        await update.message.reply_text("Извините, эта команда доступна только администратору.")
+        return
+        
     group_name = update.effective_chat.title or "test"
     if group_name not in abon_data or not abon_data[group_name]:
         await update.message.reply_text("Нет абонементов.")
