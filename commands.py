@@ -106,3 +106,21 @@ async def show_history(update: Update, context: ContextTypes.DEFAULT_TYPE):
         dates = ", ".join(visits) if visits else "нет посещений"
         message += f"🔹 {name}: {dates}\n"
     await update.message.reply_text(message)
+
+# проверка абонов
+from keyboards import get_check_keyboard
+from telegram import Update
+from telegram.ext import ContextTypes
+from storage import abon_data
+
+# Команда /check
+async def check_abonements(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    group_name = update.effective_chat.title or "test"
+
+    if group_name not in abon_data or not abon_data[group_name]:
+        await update.message.reply_text("Нет активных абонементов.")
+        return
+
+    reply_markup = get_check_keyboard(group_name)
+    await update.message.reply_text("Выберите абонемент:", reply_markup=reply_markup)
+
