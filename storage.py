@@ -4,7 +4,7 @@ from config import ABON_FILE
 
 abon_data = {}
 abon_history = []
-abon_mark_pending = {}
+abon_mark_pending = {} # временное хранилище выбранных абонементов до подтверждения
 
 def save_abons():
     with open(ABON_FILE, "w", encoding="utf-8") as f:
