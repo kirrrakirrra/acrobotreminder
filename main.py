@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from aiohttp import web
+from aiohttp import web, ClientSession
 from telegram import BotCommand
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler
 
@@ -14,10 +14,14 @@ from storage import save_abons, abon_data
 
 logging.basicConfig(level=logging.INFO)
 
+# URL своего проекта на Render
+RENDER_URL = "https://acrobotreminder.onrender.com"  # ← Замени на свой адрес
+
 # Telegram Webhook Ping Handler (для Render или Heroku)
 async def handle(request):
     return web.Response(text="Бот работает!")
 
+# Установка команд в Telegram
 async def set_commands(application: Application):
     commands = [
         BotCommand("add", "Добавить абонемент"),
@@ -27,10 +31,22 @@ async def set_commands(application: Application):
         BotCommand("rename", "Переименовать абонемент"),
         BotCommand("delete", "Удалить абонемент"),
         BotCommand("list", "Список абонементов"),
-        BotCommand("history", "История посещений"),
+        BotCommand("history", "История изменений"),
     ]
     await application.bot.set_my_commands(commands)
 
+# 🔁 Периодический самопинг
+async def self_ping():
+    while True:
+        try:
+            async with ClientSession() as session:
+                async with session.get(RENDER_URL) as response:
+                    print("Pinged self:", response.status)
+        except Exception as e:
+            print("Ошибка самопинга:", e)
+        await asyncio.sleep(300)  # каждые 5 минут
+
+# Основная функция запуска
 async def main():
     app = Application.builder().token(BOT_TOKEN).build()
 
@@ -58,6 +74,9 @@ async def main():
     site = web.TCPSite(runner, "0.0.0.0", 8080)
     await site.start()
 
+       # Старт самопинга
+    asyncio.create_task(self_ping())
+    
     await set_commands(app)
 
     print("Бот запущен")
