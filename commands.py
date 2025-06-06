@@ -40,7 +40,7 @@ async def mark_visit(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # Отметить прошлое посещение (через аргумент)
 async def past_use(update: Update, context: ContextTypes.DEFAULT_TYPE):
-     if update.effective_user.id != ADMIN_ID:
+    if update.effective_user.id != ADMIN_ID:
         await update.message.reply_text("Извините, эта команда доступна только администратору.")
         return
          
