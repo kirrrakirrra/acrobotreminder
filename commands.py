@@ -1,7 +1,7 @@
 from telegram import Update
 from telegram.ext import ContextTypes
-from storage_module import abon_data, save_abons, ADMIN_ID
-from keyboards_module import (
+from storage import abon_data, save_abons, ADMIN_ID
+from keyboards import (
     get_mark_keyboard, get_check_keyboard, get_pastuse_keyboard,
     get_rename_keyboard
 )
@@ -66,12 +66,12 @@ async def rename_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def delete_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID:
         return
-    from keyboards_module import get_rename_keyboard  # переиспользуем клавиатуру
+    from keyboards import get_rename_keyboard  # переиспользуем клавиатуру
     await update.message.reply_text("Выберите абонемент для удаления:", reply_markup=get_rename_keyboard())
 
 
 async def history_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID:
         return
-    from keyboards_module import get_date_history_keyboard
+    from keyboards import get_date_history_keyboard
     await update.message.reply_text("Выберите дату для просмотра истории:", reply_markup=get_date_history_keyboard())
