@@ -4,6 +4,7 @@ from config import ABON_FILE
 
 abon_data = {}
 abon_history = []
+abon_mark_pending = {}
 
 def save_abons():
     with open(ABON_FILE, "w", encoding="utf-8") as f:
