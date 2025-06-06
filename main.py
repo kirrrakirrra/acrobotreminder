@@ -32,7 +32,7 @@ async def set_commands(application: Application):
     await application.bot.set_my_commands(commands)
 
 async def main():
-    app = Application.builder().token(TOKEN).build()
+    app = Application.builder().token(BOT_TOKEN).build()
 
     # Команды
     app.add_handler(CommandHandler("add", add_abonement))
