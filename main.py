@@ -16,10 +16,12 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
     level=logging.INFO
 )
+
 import os
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_ID = 986242491
 GROUP_ID = -1001820363527
+ERROR_LOG_CHAT_ID = 1291715324  # Твой ID для логов
 
 # Список групп
 groups = [
@@ -109,21 +111,23 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif action == "skip":
         await query.edit_message_text("Хорошо, ничего не публикуем.")
     pass
+
 async def scheduler(app):
-        while True:
-            try:
-                now_utc = datetime.datetime.utcnow()
-                now = now_utc + datetime.timedelta(hours=7)
-                if now.hour == 12 and now.minute == 30:
-                    weekday = now.strftime("%A")
-                    for idx, group in enumerate(groups):
-                        if weekday in group["days"]:
-                            await ask_admin(app, idx, group)
-                    await asyncio.sleep(60)
-                await asyncio.sleep(20)
-            except Exception as e:
-                logging.exception("Ошибка в scheduler")
-                await asyncio.sleep(10)
+    while True:
+        try:
+            now_utc = datetime.datetime.utcnow()
+            now = now_utc + datetime.timedelta(hours=7)
+            if now.hour == 12 and now.minute == 30:
+                weekday = now.strftime("%A")
+                for idx, group in enumerate(groups):
+                    if weekday in group["days"]:
+                        await ask_admin(app, idx, group)
+                await asyncio.sleep(60)
+            await asyncio.sleep(20)
+        except Exception as e:
+            logging.exception("Ошибка в scheduler")
+            await send_error_log(app.bot, f"Ошибка в scheduler:\n{e}")
+            await asyncio.sleep(10)
 
 # Простенький aiohttp сервер для пинга uptime robot
 async def handle_ping(request):
@@ -137,14 +141,24 @@ async def start_webserver():
     site = web.TCPSite(runner, "0.0.0.0", 8080)
     await site.start()
 
+async def send_error_log(bot, message: str):
+    try:
+        await bot.send_message(chat_id=ERROR_LOG_CHAT_ID, text=f"🚨 [Bot Error]\n{message}")
+    except Exception as e:
+        logging.error(f"Не удалось отправить лог в Telegram: {e}")
+
 async def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(CallbackQueryHandler(handle_callback))
-    # без обработки текста, так как не нужна
     asyncio.create_task(scheduler(app))
-    asyncio.create_task(start_webserver())  # запускаем веб-сервер параллельно
-    await app.run_polling()
+    asyncio.create_task(start_webserver())
 
+    try:
+        await send_error_log(app.bot, "🟢 Бот успешно запущен!")  # уведомление о старте
+        await app.run_polling()
+    except Exception as e:
+        logging.exception("Бот упал с ошибкой.")
+        await send_error_log(app.bot, f"❌ Бот упал с ошибкой:\n{e}")
 
 if __name__ == "__main__":
     import time
