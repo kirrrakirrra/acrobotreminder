@@ -7,8 +7,8 @@ from config import ADMIN_ID
 # Добавить абонемент
 async def add_abonement(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID:
-    await update.message.reply_text("Извините, эта команда доступна только администратору.")
-    return
+        await update.message.reply_text("Извините, эта команда доступна только администратору.")
+        return
     
     group_name = update.effective_chat.title or "test"
     if group_name not in abon_data:
