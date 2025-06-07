@@ -1,5 +1,6 @@
 import datetime
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram.ext import ContextTypes
 from config import ADMIN_ID, NOTIFY_ID, GROUP_ID, TIMEZONE_OFFSET
 
 # Список групп и их расписания
