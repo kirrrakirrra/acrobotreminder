@@ -11,7 +11,6 @@ logging.basicConfig(
 
 async def main():
     application = Application.builder().token(BOT_TOKEN).build()
-    application.job_queue = application.job_queue or application._job_queue
 
     # Подключаем обработчики команд и кнопок
     register_handlers(application)
