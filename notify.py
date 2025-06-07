@@ -93,7 +93,7 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
         await context.bot.send_message(
             chat_id=GROUP_ID,
             message_thread_id=group["thread_id"],
-            text=message
+            text=message)
 
 # Уведомление при старте бота
 async def send_startup_notification(app):
