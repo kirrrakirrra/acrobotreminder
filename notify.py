@@ -1,5 +1,5 @@
 import datetime
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from config import ADMIN_ID, NOTIFY_ID, GROUP_ID, TIMEZONE_OFFSET
 
 # Список групп и их расписания
@@ -115,7 +115,7 @@ async def send_crash_notification(app, error: Exception):
 # Планировщик опроса в 12:30 по Вьетнаму
 def setup_daily_jobs(application):
     from datetime import time
-    job_time = time(hour=12, minute=53)
+    job_time = time(hour=11, minute=59)
     application.job_queue.run_daily(
         send_admin_reminders,
         time=job_time,
