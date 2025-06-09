@@ -18,7 +18,8 @@ async def main():
 
     # Устанавливаем ежедневные задания (опросы, напоминания и т.д.)
     setup_daily_jobs(application)
-
+    
+    print("✅ MAIN ЗАПУСТИЛСЯ — бот сейчас запустит polling...")
     # Запуск
     await application.run_polling()
 
